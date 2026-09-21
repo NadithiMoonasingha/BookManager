@@ -4,6 +4,9 @@ import com.bookmanager.model.BorrowRecord;
 import com.bookmanager.service.BorrowRecordService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,17 +24,32 @@ public class BorrowRecordController {
         this.borrowRecordService = borrowRecordService;
     }
 
-
-    // GET CURRENTLY BORROWED RECORDS
+    // =========================================================
+    // GET BORROW RECORDS
+    // =========================================================
 
     @GetMapping
-    public List<BorrowRecord> getVerifiedRecords() {
+    public List<BorrowRecord> getBorrowRecords(
+            Authentication authentication) {
 
-        return borrowRecordService.getVerifiedRecords();
+        String role = getRole(authentication);
+
+        // Admin and librarian can see all records
+        if ("ADMIN".equals(role) ||
+                "LIBRARIAN".equals(role)) {
+
+            return borrowRecordService.getAllRecords();
+        }
+
+        // Member can see only their own records
+        return borrowRecordService.getRecordsForUser(
+                authentication.getName()
+        );
     }
 
-
+    // =========================================================
     // GET PENDING VERIFICATION RECORDS
+    // =========================================================
 
     @GetMapping("/pending")
     public List<BorrowRecord> getPendingRecords() {
@@ -39,18 +57,27 @@ public class BorrowRecordController {
         return borrowRecordService.getPendingRecords();
     }
 
-
+    // =========================================================
     // GET RECORD BY ID
+    // =========================================================
 
     @GetMapping("/{id}")
     public ResponseEntity<BorrowRecord> getBorrowRecordById(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
 
-        return borrowRecordService.getBorrowRecordById(id);
+        String role = getRole(authentication);
+
+        return borrowRecordService.getBorrowRecordById(
+                id,
+                authentication.getName(),
+                role
+        );
     }
 
-
+    // =========================================================
     // CREATE BORROW REQUEST
+    // =========================================================
 
     @PostMapping
     public ResponseEntity<?> addBorrowRecord(
@@ -60,8 +87,9 @@ public class BorrowRecordController {
                 .addBorrowRecord(borrowRecord);
     }
 
-
+    // =========================================================
     // CREATE RETURN REQUEST
+    // =========================================================
 
     @PostMapping("/{id}/return")
     public ResponseEntity<?> requestReturn(
@@ -71,8 +99,9 @@ public class BorrowRecordController {
                 .requestReturn(id);
     }
 
-
+    // =========================================================
     // LIBRARIAN VERIFICATION
+    // =========================================================
 
     @PutMapping("/{id}/verify")
     public ResponseEntity<?> verifyRecord(
@@ -80,5 +109,27 @@ public class BorrowRecordController {
 
         return borrowRecordService
                 .verifyRecord(id);
+    }
+
+    // =========================================================
+    // GET USER ROLE
+    // =========================================================
+
+    private String getRole(
+            Authentication authentication) {
+
+        for (GrantedAuthority authority :
+                authentication.getAuthorities()) {
+
+            String authorityName =
+                    authority.getAuthority();
+
+            if (authorityName.startsWith("ROLE_")) {
+
+                return authorityName.substring(5);
+            }
+        }
+
+        return "";
     }
 }
