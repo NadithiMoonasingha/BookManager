@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import SplashScreen from "./pages/SplashScreen";
+import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
 
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./components/Navbar";
@@ -53,6 +55,9 @@ function App() {
                     path="/"
                     element={<Dashboard />}
                 />
+                
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
 
 
                 {/* Books */}
