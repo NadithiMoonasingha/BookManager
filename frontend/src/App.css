@@ -1041,6 +1041,64 @@ table tbody tr:last-child td {
     letter-spacing: 0.5px;
 }
 
+/* Signup / Sign In */
+.auth-page {
+    min-height: calc(100vh - 80px);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.auth-header h1 {
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: #666;
+    margin: 0;
+}
+
+.auth-button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-footer p {
+    color: #666;
+}
+
+.auth-footer a {
+    color: #19324d;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
 /* ANIMATIONS*/
 
 @keyframes splashFadeIn {

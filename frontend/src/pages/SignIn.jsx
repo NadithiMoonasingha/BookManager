@@ -61,7 +61,7 @@ function SignIn() {
     };
 
     return (
-        <div className="auth-container">
+        <div className="auth-page">
 
             <div className="auth-card">
 
