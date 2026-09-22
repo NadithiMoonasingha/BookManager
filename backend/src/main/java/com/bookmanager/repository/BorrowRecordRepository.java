@@ -15,4 +15,6 @@ public interface BorrowRecordRepository
     List<BorrowRecord> findByVerifiedFalseAndStatusIn(
             List<String> statuses
     );
+
+    List<BorrowRecord> findByUserId(Long userId);
 }
