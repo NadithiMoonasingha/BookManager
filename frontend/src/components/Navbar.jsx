@@ -13,13 +13,11 @@ function Navbar() {
             </div>
 
             <div className="navbar-links">
-                <Link to="/">Dashboard</Link>
+                <Link to="/dashboard">Dashboard</Link>
                 <Link to="/books">Books</Link>
                 <Link to="/users">Users</Link>
                 <Link to="/borrow-records">Borrow Records</Link>
-                <Link to="/librarian-verification">
-                    Librarian Verification
-                </Link>
+                <Link to="/librarian-verification"> Librarian Verification</Link>
             </div>
 
         </nav>

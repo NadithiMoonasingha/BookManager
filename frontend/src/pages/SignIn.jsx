@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../axios/axios";
+import Icon from "../components/Icons";
 
 function SignIn() {
 
@@ -37,15 +38,13 @@ function SignIn() {
 
             const data = response.data;
 
-            // Save authentication information
             localStorage.setItem("token", data.token);
             localStorage.setItem("userId", data.userId);
             localStorage.setItem("userName", data.userName);
             localStorage.setItem("userEmail", data.userEmail);
             localStorage.setItem("userRole", data.userRole);
 
-            // Go to dashboard
-            navigate("/");
+            navigate("/Sign in");
 
         } catch (error) {
 
@@ -63,34 +62,52 @@ function SignIn() {
     return (
         <div className="auth-page">
 
+            <div className="auth-decoration auth-decoration-top"></div>
+            <div className="auth-decoration auth-decoration-bottom"></div>
+
             <div className="auth-card">
 
-                <h1>Sign In</h1>
+                {/* Header */}
+                <div className="auth-header">
 
-                <p className="auth-subtitle">
-                    Sign in to your Book Manager account
-                </p>
+                    <h1>Sign In</h1>
 
+                    <p>
+                        Sign in to your Book Manager account
+                    </p>
+
+                </div>
+
+                {/* Error */}
                 {error && (
                     <div className="auth-error">
                         {error}
                     </div>
                 )}
 
+                {/* Form */}
                 <form onSubmit={handleSubmit}>
 
                     <div className="form-group">
 
                         <label>Email</label>
 
-                        <input
-                            type="email"
-                            name="userEmail"
-                            value={formData.userEmail}
-                            onChange={handleChange}
-                            placeholder="Enter your email"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="email" size={21} />
+                            </span>
+
+                            <input
+                                type="email"
+                                name="userEmail"
+                                value={formData.userEmail}
+                                onChange={handleChange}
+                                placeholder="Enter your email"
+                                required
+                            />
+
+                        </div>
 
                     </div>
 
@@ -98,35 +115,62 @@ function SignIn() {
 
                         <label>Password</label>
 
-                        <input
-                            type="password"
-                            name="userPassword"
-                            value={formData.userPassword}
-                            onChange={handleChange}
-                            placeholder="Enter your password"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="lock" size={21} />
+                            </span>
+
+                            <input
+                                type="password"
+                                name="userPassword"
+                                value={formData.userPassword}
+                                onChange={handleChange}
+                                placeholder="Enter your password"
+                                required
+                            />
+
+                        </div>
 
                     </div>
 
+                    {/* Sign In Button */}
                     <button
                         type="submit"
+                        className="signin-button"
                         disabled={loading}
                     >
-                        {loading ? "Signing In..." : "Sign In"}
+                        {loading ? (
+                            "Signing In..."
+                        ) : (
+                            <>
+                                Sign In
+                            </>
+                        )}
                     </button>
 
                 </form>
 
-                <p className="auth-link">
+                {/* Divider */}
+                <div className="auth-divider">
+                    <span></span>
+                    <p>OR</p>
+                    <span></span>
+                </div>
 
-                    Don't have an account?{" "}
+                {/* Sign Up */}
+                <div className="auth-footer">
 
-                    <span onClick={() => navigate("/signup")}>
+                    <p>Don't have an account?</p>
+
+                    <Link
+                        to="/signup"
+                        className="signup-button"
+                    >
                         Sign Up
-                    </span>
+                    </Link>
 
-                </p>
+                </div>
 
             </div>
 

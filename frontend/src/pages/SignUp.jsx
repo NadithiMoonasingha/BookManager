@@ -1,53 +1,38 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../App.css";
 import api from "../axios/axios";
+import Icon from "../components/Icons";
 
 function SignUp() {
 
     const navigate = useNavigate();
 
-    const [user, setUser] = useState({
+    const [formData, setFormData] = useState({
         userName: "",
         userEmail: "",
         userPassword: "",
         confirmPassword: "",
-        userRole: ""
+        userRole: "MEMBER",
     });
 
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleChange = (event) => {
-
-        const { name, value } = event.target;
-
-        setUser({
-            ...user,
-            [name]: value
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
         });
     };
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (e) => {
 
-        event.preventDefault();
+        e.preventDefault();
 
         setError("");
-        setMessage("");
 
-        if (user.userPassword !== user.confirmPassword) {
+        if (formData.userPassword !== formData.confirmPassword) {
             setError("Passwords do not match.");
-            return;
-        }
-
-        if (user.userPassword.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
-        }
-
-        if (!user.userRole) {
-            setError("Please select a user role.");
             return;
         }
 
@@ -56,202 +41,211 @@ function SignUp() {
         try {
 
             await api.post("/auth/signup", {
-                userName: user.userName,
-                userEmail: user.userEmail,
-                userPassword: user.userPassword,
-                userRole: user.userRole
+                userName: formData.userName,
+                userEmail: formData.userEmail,
+                userPassword: formData.userPassword,
+                userRole: formData.userRole,
             });
 
-            setMessage(
-                "Account created successfully. You can now sign in."
-            );
-
-            setUser({
-                userName: "",
-                userEmail: "",
-                userPassword: "",
-                confirmPassword: "",
-                userRole: ""
-            });
-
-            setTimeout(() => {
-                navigate("/signin");
-            }, 1500);
+            navigate("/signin");
 
         } catch (error) {
 
-            console.error(
-                "Sign up error:",
-                error
-            );
-
-            setError(
-                typeof error.response?.data === "string"
-                    ? error.response.data
-                    : error.response?.data?.message ||
-                      "Unable to create account."
-            );
+            if (error.response?.data) {
+                setError(error.response.data);
+            } else {
+                setError("Unable to create account. Please try again.");
+            }
 
         } finally {
-
             setLoading(false);
-
         }
     };
 
     return (
-
         <div className="auth-page">
 
-            <div className="auth-card">
+            <div className="auth-decoration auth-decoration-top"></div>
+            <div className="auth-decoration auth-decoration-bottom"></div>
 
+            <div className="auth-card signup-card">
+
+                {/* Header */}
                 <div className="auth-header">
 
-                    <h1>
-                        Create Account
-                    </h1>
+                    <h1>Sign Up</h1>
 
                     <p>
-                        Sign up to access the Book Manager.
+                        Create your Book Manager account
                     </p>
 
                 </div>
 
-                {message && (
-                    <div className="success-message">
-                        {message}
-                    </div>
-                )}
-
+                {/* Error */}
                 {error && (
-                    <div className="error-message">
+                    <div className="auth-error">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit}>
 
+                    {/* Name */}
                     <div className="form-group">
 
-                        <label>
-                            Full Name
-                        </label>
+                        <label>Name</label>
 
-                        <input
-                            type="text"
-                            name="userName"
-                            value={user.userName}
-                            onChange={handleChange}
-                            placeholder="Enter your full name"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="user" size={21} />
+                            </span>
+
+                            <input
+                                type="text"
+                                name="userName"
+                                value={formData.userName}
+                                onChange={handleChange}
+                                placeholder="Enter your name"
+                                required
+                            />
+
+                        </div>
 
                     </div>
 
+                    {/* Email */}
                     <div className="form-group">
 
-                        <label>
-                            Email
-                        </label>
+                        <label>Email</label>
 
-                        <input
-                            type="email"
-                            name="userEmail"
-                            value={user.userEmail}
-                            onChange={handleChange}
-                            placeholder="Enter your email"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="email" size={21} />
+                            </span>
+
+                            <input
+                                type="email"
+                                name="userEmail"
+                                value={formData.userEmail}
+                                onChange={handleChange}
+                                placeholder="Enter your email"
+                                required
+                            />
+
+                        </div>
 
                     </div>
 
+                    {/* Role */}
                     <div className="form-group">
 
-                        <label>
-                            Password
-                        </label>
+                        <label>Role</label>
 
-                        <input
-                            type="password"
-                            name="userPassword"
-                            value={user.userPassword}
-                            onChange={handleChange}
-                            placeholder="Enter your password"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="users" size={21} />
+                            </span>
+
+                            <select
+                                name="userRole"
+                                value={formData.userRole}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="MEMBER">Member</option>
+                                <option value="LIBRARIAN">Librarian</option>
+                            </select>
+
+                        </div>
 
                     </div>
 
+                    {/* Password */}
                     <div className="form-group">
 
-                        <label>
-                            Confirm Password
-                        </label>
+                        <label>Password</label>
 
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            value={user.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="Confirm your password"
-                            required
-                        />
+                        <div className="input-wrapper">
+
+                            <span className="input-icon">
+                                <Icon name="lock" size={21} />
+                            </span>
+
+                            <input
+                                type="password"
+                                name="userPassword"
+                                value={formData.userPassword}
+                                onChange={handleChange}
+                                placeholder="Enter your password"
+                                required
+                            />
+
+                        </div>
 
                     </div>
 
+                    {/* Confirm Password */}
                     <div className="form-group">
 
-                        <label>
-                            Account Type
-                        </label>
+                        <label>Confirm Password</label>
 
-                        <select
-                            name="userRole"
-                            value={user.userRole}
-                            onChange={handleChange}
-                            required
-                        >
+                        <div className="input-wrapper">
 
-                            <option value="">
-                                Select Account Type
-                            </option>
+                            <span className="input-icon">
+                                <Icon name="lock" size={21} />
+                            </span>
 
-                            <option value="MEMBER">
-                                Member
-                            </option>
+                            <input
+                                type="password"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="Confirm your password"
+                                required
+                            />
 
-                            <option value="LIBRARIAN">
-                                Librarian
-                            </option>
-
-                        </select>
+                        </div>
 
                     </div>
 
+                    {/* Sign Up Button */}
                     <button
                         type="submit"
-                        className="primary-button auth-button"
+                        className="signin-button signup-submit-button"
                         disabled={loading}
                     >
-
-                        {loading
-                            ? "Creating Account..."
-                            : "Sign Up"}
-
+                        {loading ? (
+                            "Creating Account..."
+                        ) : (
+                            <>
+                                Create Account
+                            </>
+                        )}
                     </button>
 
                 </form>
 
+                {/* Divider */}
+                <div className="auth-divider">
+                    <span></span>
+                    <p>OR</p>
+                    <span></span>
+                </div>
+
+                {/* Sign In */}
                 <div className="auth-footer">
 
-                    <p>
-                        Already have an account?{" "}
+                    <p>Already have an account?</p>
 
-                        <Link to="/signin">
-                            Sign In
-                        </Link>
-
-                    </p>
+                    <Link
+                        to="/signin"
+                        className="signup-button"
+                    >
+                        Sign In
+                    </Link>
 
                 </div>
 

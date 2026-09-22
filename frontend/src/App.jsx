@@ -33,27 +33,18 @@ function App() {
             <Routes>
                 {/* Default page after splash */}
                 <Route path="/" element={<Navigate to="/signin" replace />} />
-
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
-
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/books" element={<Books />} />
                 <Route path="/add-book" element={<AddBook />} />
                 <Route path="/edit-book/:id" element={<EditBook />} />
-
                 <Route path="/users" element={<Users />} />
                 <Route path="/add-user" element={<AddUser />} />
                 <Route path="/edit-user/:id" element={<EditUser />} />
-
                 <Route path="/borrow-records" element={<BorrowRecords />} />
                 <Route path="/add-borrow-record" element={<AddBorrowRecords />} />
-
-                <Route
-                    path="/librarian-verification"
-                    element={<LibrarianVerification />}
-                />
-
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/librarian-verification" element={<LibrarianVerification />}/>
             </Routes>
         </BrowserRouter>
     );
