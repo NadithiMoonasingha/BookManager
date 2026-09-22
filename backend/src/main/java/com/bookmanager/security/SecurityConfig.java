@@ -101,71 +101,79 @@ public class SecurityConfig {
                 // =========================
 
                 .requestMatchers("/api/auth/**")
-                .permitAll()
+                    .permitAll()
 
                 .requestMatchers(HttpMethod.OPTIONS, "/**")
-                .permitAll()
+                    .permitAll()
 
 
                 // =========================
                 // BOOKS
                 // =========================
 
-                // Anyone with librarian/admin role can manage books
+                // Members can view books
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/books/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "LIBRARIAN",
+                    "MEMBER"
+                )
+
+                // Only Admin and Librarian can manage books
                 .requestMatchers("/api/books/**")
-                .hasAnyRole("ADMIN", "LIBRARIAN")
+                    .hasAnyRole(
+                        "ADMIN",
+                        "LIBRARIAN"
+                    )
 
 
                 // =========================
                 // USERS / MEMBERS
                 // =========================
 
-                // Only admin and librarian can manage users
                 .requestMatchers("/api/users/**")
-                .hasAnyRole("ADMIN", "LIBRARIAN")
+                    .hasAnyRole(
+                        "ADMIN",
+                        "LIBRARIAN"
+                    )
 
 
                 // =========================
                 // BORROW RECORDS
                 // =========================
 
-                // Pending borrow/return verification
-                // is only for librarians
+                // Only Librarian can see pending verification
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/borrow-records/pending"
                 )
-                .hasAnyRole("ADMIN", "LIBRARIAN")
+                .hasRole("LIBRARIAN")
 
-
-                // Borrow and return requests
-                // can only be made by members
+                // Member creates borrow request
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/borrow-records"
                 )
                 .hasRole("MEMBER")
 
+                // Member requests return
                 .requestMatchers(
                     HttpMethod.POST,
                     "/api/borrow-records/*/return"
                 )
                 .hasRole("MEMBER")
 
-
-                // Borrow/return verification
-                // can only be performed by librarians
+                // Librarian verifies borrow/return
                 .requestMatchers(
                     HttpMethod.PUT,
                     "/api/borrow-records/*/verify"
                 )
                 .hasRole("LIBRARIAN")
 
-
-                // Viewing borrow records
-                // is allowed for all authenticated roles.
-                // The service will restrict MEMBER to
-                // their own records.
+                // View all / own records
                 .requestMatchers(
                     HttpMethod.GET,
                     "/api/borrow-records/**"
@@ -176,13 +184,10 @@ public class SecurityConfig {
                     "MEMBER"
                 )
 
-
-                // =========================
                 // EVERYTHING ELSE
-                // =========================
 
                 .anyRequest()
-                .authenticated()
+                    .authenticated()
             )
 
             .addFilterBefore(

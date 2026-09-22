@@ -81,10 +81,13 @@ public class BorrowRecordController {
 
     @PostMapping
     public ResponseEntity<?> addBorrowRecord(
-            @RequestBody BorrowRecord borrowRecord) {
+            @RequestBody BorrowRecord borrowRecord,
+            Authentication authentication) {
 
-        return borrowRecordService
-                .addBorrowRecord(borrowRecord);
+        return borrowRecordService.addBorrowRecord(
+                borrowRecord,
+                authentication.getName()
+        );
     }
 
     // =========================================================
@@ -93,15 +96,16 @@ public class BorrowRecordController {
 
     @PostMapping("/{id}/return")
     public ResponseEntity<?> requestReturn(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
 
-        return borrowRecordService
-                .requestReturn(id);
+        return borrowRecordService.requestReturn(
+                id,
+                authentication.getName()
+        );
     }
 
-    // =========================================================
     // LIBRARIAN VERIFICATION
-    // =========================================================
 
     @PutMapping("/{id}/verify")
     public ResponseEntity<?> verifyRecord(

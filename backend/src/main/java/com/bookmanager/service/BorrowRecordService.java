@@ -127,7 +127,15 @@ public class BorrowRecordService {
 
     @Transactional
     public ResponseEntity<?> addBorrowRecord(
-            BorrowRecord borrowRecord) {
+            BorrowRecord borrowRecord,
+            String email) {
+
+        // Get the logged-in member from the JWT email
+        User user = userRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found.")
+                );
 
         Book book = bookRepository
                 .findById(borrowRecord.getBookId())
@@ -147,6 +155,15 @@ public class BorrowRecordService {
             );
         }
 
+        // IMPORTANT:
+        // Do not trust userId/userName sent by the frontend.
+        // Set them using the authenticated user.
+        borrowRecord.setUserId(user.getUserId());
+        borrowRecord.setUserName(user.getUserName());
+
+        // Get the book title from the database as well
+        borrowRecord.setBookTitle(book.getBookTitle());
+
         borrowRecord.setStatus("PENDING_BORROW");
         borrowRecord.setVerified(false);
         borrowRecord.setReturnDate(null);
@@ -165,7 +182,16 @@ public class BorrowRecordService {
     // =========================================================
 
     @Transactional
-    public ResponseEntity<?> requestReturn(Long id) {
+    public ResponseEntity<?> requestReturn(
+            Long id,
+            String email) {
+
+        // Get logged-in member
+        User user = userRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found.")
+                );
 
         BorrowRecord originalRecord =
                 borrowRecordRepository.findById(id)
@@ -175,6 +201,16 @@ public class BorrowRecordService {
                                                 + id
                                 )
                         );
+
+        // IMPORTANT:
+        // A member can only request return for their own record.
+        if (!user.getUserId().equals(
+                originalRecord.getUserId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to request the return of this record."
+            );
+        }
 
         if (!"BORROWED".equals(
                 originalRecord.getStatus()) ||
