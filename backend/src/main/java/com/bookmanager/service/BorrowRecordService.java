@@ -2,9 +2,11 @@ package com.bookmanager.service;
 
 import com.bookmanager.model.Book;
 import com.bookmanager.model.BorrowRecord;
+import com.bookmanager.model.User;
 
 import com.bookmanager.repository.BookRepository;
 import com.bookmanager.repository.BorrowRecordRepository;
+import com.bookmanager.repository.UserRepository;
 
 import com.bookmanager.exception.BookNotFoundException;
 import com.bookmanager.exception.NoAvailableCopiesException;
@@ -27,22 +29,48 @@ public class BorrowRecordService {
 
     private final BorrowRecordRepository borrowRecordRepository;
     private final BookRepository bookRepository;
+    private final UserRepository userRepository;
 
     public BorrowRecordService(
             BorrowRecordRepository borrowRecordRepository,
-            BookRepository bookRepository) {
+            BookRepository bookRepository,
+            UserRepository userRepository) {
 
         this.borrowRecordRepository = borrowRecordRepository;
         this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
+    // =========================================================
     // GET ALL BORROW RECORDS
+    // ADMIN / LIBRARIAN
+    // =========================================================
 
-    public List<BorrowRecord> getVerifiedRecords() {
+    public List<BorrowRecord> getAllRecords() {
         return borrowRecordRepository.findAll();
     }
 
+    // =========================================================
+    // GET MEMBER'S OWN BORROW RECORDS
+    // =========================================================
+
+    public List<BorrowRecord> getRecordsForUser(String email) {
+
+        User user = userRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found.")
+                );
+
+        return borrowRecordRepository.findByUserId(
+                user.getUserId()
+        );
+    }
+
+    // =========================================================
     // GET PENDING VERIFICATION RECORDS
+    // LIBRARIAN
+    // =========================================================
 
     public List<BorrowRecord> getPendingRecords() {
 
@@ -55,29 +83,59 @@ public class BorrowRecordService {
                 );
     }
 
-
+    // =========================================================
     // GET RECORD BY ID
+    // =========================================================
 
     public ResponseEntity<BorrowRecord> getBorrowRecordById(
-            Long id) {
+            Long id,
+            String email,
+            String role) {
 
-        return borrowRecordRepository.findById(id)
-                .map(ResponseEntity::ok)
+        BorrowRecord record = borrowRecordRepository
+                .findById(id)
                 .orElseThrow(() ->
                         new BorrowRecordNotFoundException(
                                 "Borrow record not found with ID: " + id
                         )
                 );
+
+        // Members can only view their own records
+        if ("MEMBER".equals(role)) {
+
+            User user = userRepository
+                    .findByUserEmail(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("User not found.")
+                    );
+
+            if (!user.getUserId().equals(record.getUserId())) {
+
+                throw new RuntimeException(
+                        "You are not authorized to view this record."
+                );
+            }
+        }
+
+        return ResponseEntity.ok(record);
     }
 
-
+    // =========================================================
     // CREATE BORROW REQUEST
+    // MEMBER
+    // =========================================================
 
     @Transactional
     public ResponseEntity<?> addBorrowRecord(
-            BorrowRecord borrowRecord) {
+            BorrowRecord borrowRecord,
+            String email) {
 
-        // Find selected book
+        // Get the logged-in member from the JWT email
+        User user = userRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found.")
+                );
 
         Book book = bookRepository
                 .findById(borrowRecord.getBookId())
@@ -88,9 +146,6 @@ public class BorrowRecordService {
                         )
                 );
 
-
-        // Check whether copies are available
-
         if (book.getAvailableCopies() == null ||
                 book.getAvailableCopies() <= 0) {
 
@@ -100,17 +155,18 @@ public class BorrowRecordService {
             );
         }
 
+        // IMPORTANT:
+        // Do not trust userId/userName sent by the frontend.
+        // Set them using the authenticated user.
+        borrowRecord.setUserId(user.getUserId());
+        borrowRecord.setUserName(user.getUserName());
 
-        // Create pending borrow request
+        // Get the book title from the database as well
+        borrowRecord.setBookTitle(book.getBookTitle());
 
         borrowRecord.setStatus("PENDING_BORROW");
-
         borrowRecord.setVerified(false);
-
         borrowRecord.setReturnDate(null);
-
-
-        // Save request
 
         BorrowRecord savedRecord =
                 borrowRecordRepository.saveAndFlush(
@@ -120,13 +176,22 @@ public class BorrowRecordService {
         return ResponseEntity.ok(savedRecord);
     }
 
-
+    // =========================================================
     // CREATE RETURN REQUEST
+    // MEMBER
+    // =========================================================
 
     @Transactional
-    public ResponseEntity<?> requestReturn(Long id) {
+    public ResponseEntity<?> requestReturn(
+            Long id,
+            String email) {
 
-        // Find original borrowing record
+        // Get logged-in member
+        User user = userRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found.")
+                );
 
         BorrowRecord originalRecord =
                 borrowRecordRepository.findById(id)
@@ -137,8 +202,15 @@ public class BorrowRecordService {
                                 )
                         );
 
+        // IMPORTANT:
+        // A member can only request return for their own record.
+        if (!user.getUserId().equals(
+                originalRecord.getUserId())) {
 
-        // Check whether book is currently borrowed
+            throw new RuntimeException(
+                    "You are not authorized to request the return of this record."
+            );
+        }
 
         if (!"BORROWED".equals(
                 originalRecord.getStatus()) ||
@@ -150,17 +222,9 @@ public class BorrowRecordService {
             );
         }
 
-
-        // Change the existing record to pending return
-
         originalRecord.setStatus("PENDING_RETURN");
-
         originalRecord.setVerified(false);
-
         originalRecord.setReturnDate(null);
-
-
-        // Save return request
 
         BorrowRecord updatedRecord =
                 borrowRecordRepository.saveAndFlush(
@@ -170,13 +234,12 @@ public class BorrowRecordService {
         return ResponseEntity.ok(updatedRecord);
     }
 
-
+    // =========================================================
     // LIBRARIAN VERIFICATION
+    // =========================================================
 
     @Transactional
     public ResponseEntity<?> verifyRecord(Long id) {
-
-        // Find pending record
 
         BorrowRecord record =
                 borrowRecordRepository.findById(id)
@@ -187,9 +250,6 @@ public class BorrowRecordService {
                                 )
                         );
 
-
-        // Check whether already verified
-
         if (Boolean.TRUE.equals(
                 record.getVerified())) {
 
@@ -198,17 +258,11 @@ public class BorrowRecordService {
             );
         }
 
-
-        // VERIFY BORROW
-
         if ("PENDING_BORROW".equals(
                 record.getStatus())) {
 
             return verifyBorrow(record);
         }
-
-
-        // VERIFY RETURN
 
         if ("PENDING_RETURN".equals(
                 record.getStatus())) {
@@ -216,22 +270,18 @@ public class BorrowRecordService {
             return verifyReturn(record);
         }
 
-
-        // Invalid status
-
         throw new InvalidBorrowRecordStatusException(
                 "Invalid borrow record status: "
                         + record.getStatus()
         );
     }
 
-
+    // =========================================================
     // VERIFY BORROW
+    // =========================================================
 
     private ResponseEntity<?> verifyBorrow(
             BorrowRecord record) {
-
-        // Find book
 
         Book book = bookRepository
                 .findById(record.getBookId())
@@ -241,9 +291,6 @@ public class BorrowRecordService {
                                         + record.getBookId()
                         )
                 );
-
-
-        // Check availability again
 
         if (book.getAvailableCopies() == null ||
                 book.getAvailableCopies() <= 0) {
@@ -253,22 +300,14 @@ public class BorrowRecordService {
             );
         }
 
-
-        // Decrease available copies
-
         book.setAvailableCopies(
                 book.getAvailableCopies() - 1
         );
 
         bookRepository.save(book);
 
-
-        // Update borrow record
-
         record.setStatus("BORROWED");
-
         record.setVerified(true);
-
 
         BorrowRecord updatedRecord =
                 borrowRecordRepository.saveAndFlush(
@@ -278,13 +317,12 @@ public class BorrowRecordService {
         return ResponseEntity.ok(updatedRecord);
     }
 
-
+    // =========================================================
     // VERIFY RETURN
+    // =========================================================
 
     private ResponseEntity<?> verifyReturn(
             BorrowRecord record) {
-
-        // Find book
 
         Book book = bookRepository
                 .findById(record.getBookId())
@@ -295,19 +333,12 @@ public class BorrowRecordService {
                         )
                 );
 
-
-        // Get available copies
-
         Integer availableCopies =
                 book.getAvailableCopies();
 
         if (availableCopies == null) {
-
             availableCopies = 0;
         }
-
-
-        // Increase available copies
 
         book.setAvailableCopies(
                 availableCopies + 1
@@ -315,17 +346,11 @@ public class BorrowRecordService {
 
         bookRepository.save(book);
 
-
-        // Update return record
-
         record.setStatus("RETURNED");
-
         record.setVerified(true);
-
         record.setReturnDate(
                 LocalDate.now()
         );
-
 
         BorrowRecord updatedRecord =
                 borrowRecordRepository.saveAndFlush(

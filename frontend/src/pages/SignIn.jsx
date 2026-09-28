@@ -3,16 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../axios/axios";
 import Icon from "../components/Icons";
 
-function SignUp() {
+function SignIn() {
 
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
-        userName: "",
         userEmail: "",
         userPassword: "",
-        confirmPassword: "",
-        userRole: "MEMBER",
     });
 
     const [error, setError] = useState("");
@@ -30,31 +27,31 @@ function SignUp() {
         e.preventDefault();
 
         setError("");
-
-        if (formData.userPassword !== formData.confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
-
         setLoading(true);
 
         try {
 
-            await api.post("/auth/signup", {
-                userName: formData.userName,
-                userEmail: formData.userEmail,
-                userPassword: formData.userPassword,
-                userRole: formData.userRole,
-            });
+            const response = await api.post(
+                "/auth/login",
+                formData
+            );
 
-            navigate("/signin");
+            const data = response.data;
+
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("userId", data.userId);
+            localStorage.setItem("userName", data.userName);
+            localStorage.setItem("userEmail", data.userEmail);
+            localStorage.setItem("userRole", data.userRole);
+
+            navigate("/Sign in");
 
         } catch (error) {
 
             if (error.response?.data) {
                 setError(error.response.data);
             } else {
-                setError("Unable to create account. Please try again.");
+                setError("Unable to sign in. Please try again.");
             }
 
         } finally {
@@ -68,15 +65,15 @@ function SignUp() {
             <div className="auth-decoration auth-decoration-top"></div>
             <div className="auth-decoration auth-decoration-bottom"></div>
 
-            <div className="auth-card signup-card">
+            <div className="auth-card">
 
                 {/* Header */}
                 <div className="auth-header">
 
-                    <h1>Sign Up</h1>
+                    <h1>Sign In</h1>
 
                     <p>
-                        Create your Book Manager account
+                        Sign in to your Book Manager account
                     </p>
 
                 </div>
@@ -88,33 +85,9 @@ function SignUp() {
                     </div>
                 )}
 
+                {/* Form */}
                 <form onSubmit={handleSubmit}>
 
-                    {/* Name */}
-                    <div className="form-group">
-
-                        <label>Name</label>
-
-                        <div className="input-wrapper">
-
-                            <span className="input-icon">
-                                <Icon name="user" size={21} />
-                            </span>
-
-                            <input
-                                type="text"
-                                name="userName"
-                                value={formData.userName}
-                                onChange={handleChange}
-                                placeholder="Enter your name"
-                                required
-                            />
-
-                        </div>
-
-                    </div>
-
-                    {/* Email */}
                     <div className="form-group">
 
                         <label>Email</label>
@@ -138,32 +111,6 @@ function SignUp() {
 
                     </div>
 
-                    {/* Role */}
-                    <div className="form-group">
-
-                        <label>Role</label>
-
-                        <div className="input-wrapper">
-
-                            <span className="input-icon">
-                                <Icon name="users" size={21} />
-                            </span>
-
-                            <select
-                                name="userRole"
-                                value={formData.userRole}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="MEMBER">Member</option>
-                                <option value="LIBRARIAN">Librarian</option>
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                    {/* Password */}
                     <div className="form-group">
 
                         <label>Password</label>
@@ -187,41 +134,17 @@ function SignUp() {
 
                     </div>
 
-                    {/* Confirm Password */}
-                    <div className="form-group">
-
-                        <label>Confirm Password</label>
-
-                        <div className="input-wrapper">
-
-                            <span className="input-icon">
-                                <Icon name="lock" size={21} />
-                            </span>
-
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                placeholder="Confirm your password"
-                                required
-                            />
-
-                        </div>
-
-                    </div>
-
-                    {/* Sign Up Button */}
+                    {/* Sign In Button */}
                     <button
                         type="submit"
-                        className="signin-button signup-submit-button"
+                        className="signin-button"
                         disabled={loading}
                     >
                         {loading ? (
-                            "Creating Account..."
+                            "Signing In..."
                         ) : (
                             <>
-                                Create Account
+                                Sign In
                             </>
                         )}
                     </button>
@@ -235,16 +158,16 @@ function SignUp() {
                     <span></span>
                 </div>
 
-                {/* Sign In */}
+                {/* Sign Up */}
                 <div className="auth-footer">
 
-                    <p>Already have an account?</p>
+                    <p>Don't have an account?</p>
 
                     <Link
-                        to="/signin"
+                        to="/signup"
                         className="signup-button"
                     >
-                        Sign In
+                        Sign Up
                     </Link>
 
                 </div>
@@ -255,4 +178,4 @@ function SignUp() {
     );
 }
 
-export default SignUp;
+export default SignIn;
