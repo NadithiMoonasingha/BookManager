@@ -286,25 +286,6 @@ function AddBook() {
                     </div>
 
 
-                    <div className="form-group">
-
-                        <label>
-                            Available Copies
-                        </label>
-
-                        <input
-                            type="number"
-                            name="availableCopies"
-                            value={book.availableCopies}
-                            onChange={handleChange}
-                            placeholder="Available Copies"
-                            min="0"
-                            required
-                        />
-
-                    </div>
-
-
                 </div>
 
 
