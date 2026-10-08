@@ -104,10 +104,9 @@ function AddUser() {
                                 required
                             >
                                 <option value="">Select Role</option>
-                                <option value="ADMIN">Admin</option>
                                 <option value="LIBRARIAN">Librarian</option>
                                 <option value="MEMBER">Member</option>
-                                <option value="GUEST">Guest</option>
+
                             </select>
                         </div>
 

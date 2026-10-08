@@ -7,6 +7,7 @@ function Dashboard() {
     const [users, setUsers] = useState([]);
     const [borrowRecords, setBorrowRecords] = useState([]);
     const [loading, setLoading] = useState(true);
+    const userRole = localStorage.getItem("userRole");
 
 useEffect(() => {
 
@@ -256,12 +257,14 @@ useEffect(() => {
                             There are currently no borrow records.
                         </p>
 
-                        <Link
-                            to="/add-borrow-record"
-                            className="primary-button"
-                        >
-                            + Add Borrow Record
-                        </Link>
+                        {userRole !== "LIBRARIAN" && (
+                            <Link
+                                to="/add-borrow-record"
+                                className="primary-button"
+                            >
+                                + Add Borrow Record
+                            </Link>
+                        )}
 
                     </div>
 

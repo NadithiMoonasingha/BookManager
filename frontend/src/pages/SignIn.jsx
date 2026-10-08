@@ -44,7 +44,7 @@ function SignIn() {
             localStorage.setItem("userEmail", data.userEmail);
             localStorage.setItem("userRole", data.userRole);
 
-            navigate("/Sign in");
+            navigate("/dashboard", { replace: true });
 
         } catch (error) {
 
